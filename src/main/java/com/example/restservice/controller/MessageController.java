@@ -19,12 +19,19 @@ public class MessageController {
     public MessageController() {
     }
 
-    @GetMapping("/messages")
-    public MessagesSearchResponse getMessages(@RequestParam(value = "latitude", required = false) Double latitude,
+    @GetMapping("/searchMessages")
+    public MessagesSearchResponse getSearchMessages(@RequestParam(value = "latitude", required = false) Double latitude,
                                               @RequestParam(value = "longitude", required = false) Double longitude,
                                               @RequestParam(value = "radius", required = false) Double radius)
                                               throws SQLException, ClassNotFoundException {
         return Message.getMessagesSearchResponse(latitude, longitude, radius);
+    }
+
+    @GetMapping("/allMessages")
+    public MessagesSearchResponse getMessages(@RequestParam(value = "page", required = false, defaultValue = "1") int page,
+                                              @RequestParam(value = "messageOnPage", required = false, defaultValue = "5") int messageOnPage)
+            throws SQLException, ClassNotFoundException {
+        return Message.getMessagesAllResponse(page, messageOnPage);
     }
 
     @PostMapping("/messages")

@@ -68,7 +68,7 @@ public class Message {
         double longitudeMin = longitude - (radius * 12.0 * 0.000001);
         double longitudeMax = longitude + (radius * 12.0 * 0.000001);
 
-        ArrayList<Message> messages = new ArrayList<Message>();
+        ArrayList<Message> messagesSearch = new ArrayList<Message>();
         MessagesSearchResponse messagesSearchResponse = new MessagesSearchResponse();
         if(MessageController.conn == null) MessageController.conn = SqlConnection.getMySQLConnection();
         String sqlSelect = "SELECT " + SqlNames.TEXT + ", " +  SqlNames.USER + ", " +
@@ -91,9 +91,47 @@ public class Message {
             message.setxCoordinate(rs.getDouble(3));
             message.setyCoordinate(rs.getDouble(4));
             message.setCreateDate(rs.getDate(5));
-            messages.add(message);
+            messagesSearch.add(message);
         }
-        messagesSearchResponse.setMessages(messages);
+        messagesSearchResponse.setMessages(messagesSearch);
+        return messagesSearchResponse;
+    }
+
+    public static MessagesSearchResponse getMessagesAllResponse (int page, int messageOnPage) throws SQLException, ClassNotFoundException {
+
+        ArrayList<Message> messagesAll = new ArrayList<Message>();
+        MessagesSearchResponse messagesSearchResponse = new MessagesSearchResponse();
+        if(MessageController.conn == null) MessageController.conn = SqlConnection.getMySQLConnection();
+        String sqlSelect = "SELECT " + SqlNames.TEXT + ", " +  SqlNames.USER + ", " +
+                SqlNames.COORDINATE_X + ", " + SqlNames.COORDINATE_Y + "," +
+                " " + SqlNames.DATE + " FROM " + SqlNames.DB + "." + SqlNames.TABLE;
+
+        PreparedStatement preparedStatement = MessageController.conn.prepareStatement(sqlSelect);
+        ResultSet rs = preparedStatement.executeQuery();
+        int countMessage = 0;
+        while (rs.next()) {
+            countMessage++;
+            Message message = new Message();
+            message.setText(rs.getString(1));
+            message.setUserName(rs.getString(2));
+            message.setxCoordinate(rs.getDouble(3));
+            message.setyCoordinate(rs.getDouble(4));
+            message.setCreateDate(rs.getDate(5));
+            messagesAll.add(message);
+        }
+        ArrayList<Message> listMessagesOnPage = new ArrayList<Message>();
+
+        int countPage = (int) Math.ceil((double)countMessage / (double) messageOnPage); ;
+        if (page > countPage) throw new ResponseStatusException( HttpStatus.BAD_REQUEST, "Incorrect page");
+            for(int i = ((page * messageOnPage) - messageOnPage); i < (page * messageOnPage); i++){
+                if(i == messagesAll.size()) break;
+                listMessagesOnPage.add(messagesAll.get(i));
+            }
+
+        messagesSearchResponse.setMessages(listMessagesOnPage);
+        messagesSearchResponse.setCountMessage(countMessage);
+        messagesSearchResponse.setPage(page);
+        messagesSearchResponse.setCountPage(countPage);
         return messagesSearchResponse;
     }
 }
