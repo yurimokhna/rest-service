@@ -1,4 +1,4 @@
-package com.example.restservice.properties;
+package com.example.restservice.sql;
 
 public class SqlConnectionSettings {
 

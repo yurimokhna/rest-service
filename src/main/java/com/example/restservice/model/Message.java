@@ -1,8 +1,8 @@
 package com.example.restservice.model;
 
 import com.example.restservice.controller.MessageController;
-import com.example.restservice.properties.SqlConnection;
-import com.example.restservice.properties.SqlNames;
+import com.example.restservice.sql.SqlConnection;
+import com.example.restservice.sql.SqlNames;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -60,9 +60,16 @@ public class Message {
     }
 
     public static MessagesSearchResponse getMessagesSearchResponse (Double latitude, Double longitude, Double radius) throws SQLException, ClassNotFoundException {
-        if(latitude == null) throw new ResponseStatusException( HttpStatus.BAD_REQUEST, "Incorrect latitude");
-        else if(longitude == null) throw new ResponseStatusException( HttpStatus.BAD_REQUEST, "Incorrect longitude");
-        else if(radius == null) throw new ResponseStatusException( HttpStatus.BAD_REQUEST, "Incorrect radius");
+        if(latitude == null){
+            throw new ResponseStatusException( HttpStatus.BAD_REQUEST, "Incorrect latitude");
+        }
+        else if(longitude == null){
+            throw new ResponseStatusException( HttpStatus.BAD_REQUEST, "Incorrect longitude");
+        }
+        else if(radius == null){
+            throw new ResponseStatusException( HttpStatus.BAD_REQUEST, "Incorrect radius");
+        }
+
         double latitudeMin = latitude - (radius * 9.0 * 0.000001);
         double latitudeMax = latitude + (radius * 9.0 * 0.000001);
         double longitudeMin = longitude - (radius * 12.0 * 0.000001);
@@ -123,10 +130,10 @@ public class Message {
 
         int countPage = (int) Math.ceil((double)countMessage / (double) messageOnPage); ;
         if (page > countPage) throw new ResponseStatusException( HttpStatus.BAD_REQUEST, "Incorrect page");
-            for(int i = ((page * messageOnPage) - messageOnPage); i < (page * messageOnPage); i++){
-                if(i == messagesAll.size()) break;
-                listMessagesOnPage.add(messagesAll.get(i));
-            }
+        for(int i = ((page * messageOnPage) - messageOnPage); i < (page * messageOnPage); i++){
+            if(i == messagesAll.size()) break;
+        listMessagesOnPage.add(messagesAll.get(i));
+        }
 
         messagesSearchResponse.setMessages(listMessagesOnPage);
         messagesSearchResponse.setCountMessage(countMessage);
