@@ -1,5 +1,6 @@
 package com.example.restservice.controller;
 
+import java.security.NoSuchAlgorithmException;
 import java.sql.*;
 
 import com.example.restservice.model.Message;
@@ -13,10 +14,8 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 public class MessageController {
-    public static Connection conn;
 
-    public MessageController() {
-    }
+    public static Connection conn;
 
     @GetMapping("/searchMessages")
     public MessagesSearchResponse getSearchMessages(@RequestParam(value = "latitude", required = false) Double latitude,
@@ -24,7 +23,7 @@ public class MessageController {
                                               @RequestParam(value = "radius", required = false) Double radius,
                                               @RequestHeader ("userName") String userName,
                                               @RequestHeader("userPassword") String userPassword)
-                                              throws SQLException, ClassNotFoundException {
+            throws SQLException, ClassNotFoundException, NoSuchAlgorithmException {
 
         User.isValidUser(userName, userPassword);
         return Message.getMessagesSearchResponse(latitude, longitude, radius);
@@ -36,7 +35,7 @@ public class MessageController {
                                               int messageOnPage,
                                               @RequestHeader ("userName") String userName,
                                               @RequestHeader("userPassword") String userPassword)
-                                              throws SQLException, ClassNotFoundException {
+            throws SQLException, ClassNotFoundException, NoSuchAlgorithmException {
 
         User.isValidUser(userName, userPassword);
         return Message.getMessagesAllResponse(page, messageOnPage);
@@ -47,7 +46,7 @@ public class MessageController {
     public Message MessageCreateRequest(@RequestBody MessageCreateRequest request,
                                         @RequestHeader ("userName") String userName,
                                         @RequestHeader("userPassword") String userPassword)
-                                        throws SQLException, ClassNotFoundException {
+            throws SQLException, ClassNotFoundException, NoSuchAlgorithmException {
 
         if(conn == null) conn = SqlConnection.getMySQLConnection();
         User.isValidUser(userName, userPassword);
@@ -77,13 +76,13 @@ public class MessageController {
     }
 
     @PostMapping("/createUser")
-    public User createNewUser (@RequestBody User user) throws SQLException, ClassNotFoundException {
+    public User createNewUser (@RequestBody User user) throws SQLException, ClassNotFoundException, NoSuchAlgorithmException {
         if(conn == null) conn = SqlConnection.getMySQLConnection();
         String sqlInsert = "INSERT INTO users (name , password) VALUES (?, ?)";
 
         PreparedStatement preparedStatement = conn.prepareStatement(sqlInsert);
         preparedStatement.setString(1, user.getName());
-        preparedStatement.setString(2, user.getPassword());
+        preparedStatement.setString(2, User.getHashPassword(user.getPassword()));
         preparedStatement.executeUpdate();
 
         Statement statement = conn.createStatement();
