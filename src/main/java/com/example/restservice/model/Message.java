@@ -6,18 +6,15 @@ import com.example.restservice.sql.SqlNames;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
-import java.util.Date;
 
 public class Message {
     private String text;
     private String userName;
     private double xCoordinate;
     private double yCoordinate;
-    private Date createDate;
+    private Timestamp createDate;
 
     public void setText(String text) {
         this.text = text;
@@ -35,7 +32,7 @@ public class Message {
         this.yCoordinate = yCoordinate;
     }
 
-    public void setCreateDate(Date createDate) {
+    public void setCreateDate(Timestamp createDate) {
         this.createDate = createDate;
     }
 
@@ -55,7 +52,7 @@ public class Message {
         return this.yCoordinate;
     }
 
-    public Date getCreateDate() {
+    public Timestamp getCreateDate() {
         return this.createDate;
     }
 
@@ -97,7 +94,7 @@ public class Message {
             message.setUserName(rs.getString(2));
             message.setxCoordinate(rs.getDouble(3));
             message.setyCoordinate(rs.getDouble(4));
-            message.setCreateDate(rs.getDate(5));
+            message.setCreateDate(rs.getTimestamp(5));
             messagesSearch.add(message);
         }
         messagesSearchResponse.setMessages(messagesSearch);
@@ -123,8 +120,9 @@ public class Message {
             message.setUserName(rs.getString(2));
             message.setxCoordinate(rs.getDouble(3));
             message.setyCoordinate(rs.getDouble(4));
-            message.setCreateDate(rs.getDate(5));
+            message.setCreateDate(rs.getTimestamp(5));
             messagesAll.add(message);
+            System.out.println(message.getCreateDate());
         }
         ArrayList<Message> listMessagesOnPage = new ArrayList<Message>();
 
