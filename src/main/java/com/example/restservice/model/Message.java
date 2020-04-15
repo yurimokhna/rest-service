@@ -101,41 +101,48 @@ public class Message {
         return messagesSearchResponse;
     }
 
-    public static MessagesSearchResponse getMessagesAllResponse (int page, int messageOnPage) throws SQLException, ClassNotFoundException {
+    public static MessagesSearchResponse getMessagesAllResponse (int page, int messageOnPage)
+            throws SQLException, ClassNotFoundException {
 
-        ArrayList<Message> messagesAll = new ArrayList<Message>();
+        ArrayList<Message> messagesOnPage = new ArrayList<>();
         MessagesSearchResponse messagesSearchResponse = new MessagesSearchResponse();
-        if(MessageController.conn == null) MessageController.conn = SqlConnection.getMySQLConnection();
-        String sqlSelect = "SELECT " + SqlNames.TEXT + ", " +  SqlNames.USER + ", " +
-                SqlNames.COORDINATE_X + ", " + SqlNames.COORDINATE_Y + "," +
-                " " + SqlNames.DATE + " FROM " + SqlNames.DB + "." + SqlNames.TABLE;
 
-        PreparedStatement preparedStatement = MessageController.conn.prepareStatement(sqlSelect);
-        ResultSet rs = preparedStatement.executeQuery();
+        if(MessageController.conn == null) MessageController.conn = SqlConnection.getMySQLConnection();
+
         int countMessage = 0;
+        String sqlSelectCount = "SELECT COUNT(*) FROM messages";
+        PreparedStatement preparedStatement = MessageController.conn.prepareStatement(sqlSelectCount);
+        ResultSet rs = preparedStatement.executeQuery();
+
         while (rs.next()) {
-            countMessage++;
+            countMessage = rs.getInt(1);
+        }
+
+        int countPage = (int) Math.ceil((double)countMessage / (double) messageOnPage);
+        if (page > countPage) throw new ResponseStatusException( HttpStatus.NOT_FOUND, "Incorrect page");
+
+        String sqlSelectOnPage = "SELECT text, user_name, X( `coordinate` ) , Y( `coordinate` ), " +
+                " create_date FROM messages.messages ORDER BY create_date DESC LIMIT ? offset ?";
+
+        preparedStatement = MessageController.conn.prepareStatement(sqlSelectOnPage);
+        preparedStatement.setInt(1, messageOnPage);
+        preparedStatement.setInt(2, ((page * messageOnPage) - messageOnPage));
+
+        rs =  preparedStatement.executeQuery();
+        while (rs.next()) {
             Message message = new Message();
             message.setText(rs.getString(1));
             message.setUserName(rs.getString(2));
             message.setxCoordinate(rs.getDouble(3));
             message.setyCoordinate(rs.getDouble(4));
             message.setCreateDate(rs.getTimestamp(5));
-            messagesAll.add(message);
+            messagesOnPage.add(message);
         }
-        ArrayList<Message> listMessagesOnPage = new ArrayList<Message>();
-
-        int countPage = (int) Math.ceil((double)countMessage / (double) messageOnPage); ;
-        if (page > countPage) throw new ResponseStatusException( HttpStatus.BAD_REQUEST, "Incorrect page");
-        for(int i = ((page * messageOnPage) - messageOnPage); i < (page * messageOnPage); i++){
-            if(i == messagesAll.size()) break;
-        listMessagesOnPage.add(messagesAll.get(i));
-        }
-
-        messagesSearchResponse.setMessages(listMessagesOnPage);
+        messagesSearchResponse.setMessages(messagesOnPage);
         messagesSearchResponse.setCountMessage(countMessage);
         messagesSearchResponse.setPage(page);
         messagesSearchResponse.setCountPage(countPage);
+
         return messagesSearchResponse;
     }
 }
