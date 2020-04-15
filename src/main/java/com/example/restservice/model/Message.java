@@ -122,7 +122,6 @@ public class Message {
             message.setyCoordinate(rs.getDouble(4));
             message.setCreateDate(rs.getTimestamp(5));
             messagesAll.add(message);
-            System.out.println(message.getCreateDate());
         }
         ArrayList<Message> listMessagesOnPage = new ArrayList<Message>();
 

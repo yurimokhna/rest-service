@@ -20,8 +20,8 @@ public class MessageController {
     public MessagesSearchResponse getSearchMessages(@RequestParam(value = "latitude", required = false) Double latitude,
                                               @RequestParam(value = "longitude", required = false) Double longitude,
                                               @RequestParam(value = "radius", required = false) Double radius,
-                                              @RequestHeader ("userName") String userName,
-                                              @RequestHeader("userPassword") String userPassword)
+                                              @RequestHeader ("user_name") String userName,
+                                              @RequestHeader("user_password") String userPassword)
             throws SQLException, ClassNotFoundException, NoSuchAlgorithmException {
         User.isValidUser(userName, userPassword);
         return Message.getMessagesSearchResponse(latitude, longitude, radius);
@@ -31,8 +31,8 @@ public class MessageController {
     public MessagesSearchResponse getMessages(@RequestParam(value = "page", required = false, defaultValue = "1") int page,
                                               @RequestParam(value = "messageOnPage", required = false, defaultValue = "5")
                                               int messageOnPage,
-                                              @RequestHeader ("userName") String userName,
-                                              @RequestHeader("userPassword") String userPassword)
+                                              @RequestHeader ("user_name") String userName,
+                                              @RequestHeader("user_password") String userPassword)
             throws SQLException, ClassNotFoundException, NoSuchAlgorithmException {
 
         User.isValidUser(userName, userPassword);
@@ -42,8 +42,8 @@ public class MessageController {
     @PostMapping("/add")
     @ResponseStatus(HttpStatus.CREATED)
     public Message MessageCreateRequest(@RequestBody MessageCreateRequest request,
-                                        @RequestHeader ("userName") String userName,
-                                        @RequestHeader("userPassword") String userPassword)
+                                        @RequestHeader ("user_name") String userName,
+                                        @RequestHeader("user_password") String userPassword)
             throws SQLException, ClassNotFoundException, NoSuchAlgorithmException {
 
         if(conn == null) conn = SqlConnection.getMySQLConnection();
