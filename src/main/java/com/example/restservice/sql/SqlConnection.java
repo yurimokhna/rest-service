@@ -5,6 +5,9 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class SqlConnection {
+
+    public static Connection connection;
+
     public static Connection getMySQLConnection() throws SQLException, ClassNotFoundException {
         String hostName = SqlConnectionSettings.HOSTNAME;
         String dbName = SqlConnectionSettings.DB_NAME;

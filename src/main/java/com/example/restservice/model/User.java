@@ -1,17 +1,12 @@
 package com.example.restservice.model;
 
-import com.example.restservice.controller.MessageController;
 import com.example.restservice.sql.SqlConnection;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 
 public class User {
     private String name;
@@ -40,13 +35,12 @@ public class User {
     }
 
     public static boolean isValidUser(String userName, String userPassword) throws SQLException, ClassNotFoundException, NoSuchAlgorithmException {
-        if (MessageController.conn == null) MessageController.conn = SqlConnection.getMySQLConnection();
-
+        if (SqlConnection.connection == null) SqlConnection.connection = SqlConnection.getMySQLConnection();
         User user = new User();
 
         String SqlSelectUser = "SELECT name, password FROM  users where name= ?";
 
-        PreparedStatement preparedStatement = MessageController.conn.prepareStatement(SqlSelectUser);
+        PreparedStatement preparedStatement = SqlConnection.connection.prepareStatement(SqlSelectUser);
         preparedStatement.setString(1, userName);
         ResultSet rs = preparedStatement.executeQuery();
 
@@ -56,19 +50,19 @@ public class User {
         }
         String lineSeparator = System.getProperty("line.separator");
         if (user.getName() == null) {
-            System.out.println(lineSeparator +"Пользователь не найден в БД");
+            System.out.println(lineSeparator + "РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ РЅРµ РЅР°Р№РґРµРЅ РІ Р‘Р”");
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Incorrect user name");
         }
         String encodedPassword = User.getHashPassword(userPassword);
         if (user.getPassword().equals(encodedPassword)) {
-            System.out.println(lineSeparator + "Найденный пользователь в БД - " + user);
-            System.out.println("Введенные данные            - name='" + userName +
+            System.out.println(lineSeparator + "РќР°Р№РґРµРЅРЅС‹Р№ РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ РІ Р‘Р” - " + user);
+            System.out.println("Р’РІРµРґРµРЅРЅС‹Рµ РґР°РЅРЅС‹Рµ            - name='" + userName +
                     "', password='" + encodedPassword + "'" + " passwordUnencrypted='" + userPassword + "'");
             System.out.println("login successful");
             return true;
         } else {
-            System.out.println(lineSeparator + "Найденный пользователь в БД - " + user);
-            System.out.println("Введенные данные            - name='" + userName +
+            System.out.println(lineSeparator + "РќР°Р№РґРµРЅРЅС‹Р№ РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ РІ Р‘Р” - " + user);
+            System.out.println("Р’РІРµРґРµРЅРЅС‹Рµ РґР°РЅРЅС‹Рµ            - name='" + userName +
                     "', password='" + encodedPassword + "'" + " passwordUnencrypted='" + userPassword + "'");
             System.out.println("login failed");
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Incorrect password");
@@ -88,23 +82,24 @@ public class User {
         return hexString.toString();
     }
 
-    public static User createNewUser (User user) throws SQLException, NoSuchAlgorithmException {
-        //Проверка уже существующих пользователей
+    public static User createNewUser(User user) throws SQLException, NoSuchAlgorithmException, ClassNotFoundException {
+        //РџСЂРѕРІРµСЂРєР° СѓР¶Рµ СЃСѓС‰РµСЃС‚РІСѓСЋС‰РёС… РїРѕР»СЊР·РѕРІР°С‚РµР»РµР№
+        if (SqlConnection.connection == null) SqlConnection.connection = SqlConnection.getMySQLConnection();
         String sqlSelectUser = "SELECT name FROM users WHERE name = ?";
         PreparedStatement preparedStatement;
-        preparedStatement = MessageController.conn.prepareStatement(sqlSelectUser);
+        preparedStatement = SqlConnection.connection.prepareStatement(sqlSelectUser);
         preparedStatement.setString(1, user.getName());
         ResultSet rs = preparedStatement.executeQuery();
-        if(rs.next())  throw new ResponseStatusException( HttpStatus.BAD_REQUEST, "User already exists");
+        if (rs.next()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User already exists");
 
         String sqlInsert = "INSERT INTO users (name , password) VALUES (?, ?)";
 
-        preparedStatement = MessageController.conn.prepareStatement(sqlInsert);
+        preparedStatement = SqlConnection.connection.prepareStatement(sqlInsert);
         preparedStatement.setString(1, user.getName());
         preparedStatement.setString(2, User.getHashPassword(user.getPassword()));
         preparedStatement.executeUpdate();
 
-        Statement statement = MessageController.conn.createStatement();
+        Statement statement = SqlConnection.connection.createStatement();
         String sqlSelect = "SELECT name, password FROM users ORDER BY id DESC LIMIT 1";
         rs = statement.executeQuery(sqlSelect);
         while (rs.next()) {
@@ -113,5 +108,4 @@ public class User {
         }
         return user;
     }
-
 }
