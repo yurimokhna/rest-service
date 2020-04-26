@@ -2,6 +2,7 @@ package com.example.restservice.controller;
 
 import com.example.restservice.model.User;
 import com.example.restservice.sql.SqlConnection;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -19,34 +20,10 @@ import java.sql.Statement;
 @RequestMapping("/user")
 public class UserController {
 
-
-
     @PostMapping("/create")
     public User createNewUser (@RequestBody User user) throws SQLException, ClassNotFoundException, NoSuchAlgorithmException {
         if(MessageController.conn == null) MessageController.conn = SqlConnection.getMySQLConnection();
-
-        //Проверка уже существующих пользователей
-        String sqlSelectUser = "SELECT name FROM users WHERE name = ?";
-        PreparedStatement preparedStatement;
-        preparedStatement = MessageController.conn.prepareStatement(sqlSelectUser);
-        preparedStatement.setString(1, user.getName());
-        ResultSet rs = preparedStatement.executeQuery();
-        if(rs.next())  throw new ResponseStatusException( HttpStatus.BAD_REQUEST, "User already exists");
-
-        String sqlInsert = "INSERT INTO users (name , password) VALUES (?, ?)";
-
-        preparedStatement = MessageController.conn.prepareStatement(sqlInsert);
-        preparedStatement.setString(1, user.getName());
-        preparedStatement.setString(2, User.getHashPassword(user.getPassword()));
-        preparedStatement.executeUpdate();
-
-        Statement statement = MessageController.conn.createStatement();
-        String sqlSelect = "SELECT name, password FROM users ORDER BY id DESC LIMIT 1";
-        rs = statement.executeQuery(sqlSelect);
-        while (rs.next()) {
-            user.setName(rs.getString(1));
-            user.setPassword(rs.getString(2));
-        }
+        user = User.createNewUser(user);
         return user;
     }
 }

@@ -3,6 +3,7 @@ package com.example.restservice.model;
 import com.example.restservice.controller.MessageController;
 import com.example.restservice.sql.SqlConnection;
 import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -10,6 +11,7 @@ import java.security.NoSuchAlgorithmException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 public class User {
     private String name;
@@ -85,4 +87,31 @@ public class User {
         }
         return hexString.toString();
     }
+
+    public static User createNewUser (User user) throws SQLException, NoSuchAlgorithmException {
+        //ѕроверка уже существующих пользователей
+        String sqlSelectUser = "SELECT name FROM users WHERE name = ?";
+        PreparedStatement preparedStatement;
+        preparedStatement = MessageController.conn.prepareStatement(sqlSelectUser);
+        preparedStatement.setString(1, user.getName());
+        ResultSet rs = preparedStatement.executeQuery();
+        if(rs.next())  throw new ResponseStatusException( HttpStatus.BAD_REQUEST, "User already exists");
+
+        String sqlInsert = "INSERT INTO users (name , password) VALUES (?, ?)";
+
+        preparedStatement = MessageController.conn.prepareStatement(sqlInsert);
+        preparedStatement.setString(1, user.getName());
+        preparedStatement.setString(2, User.getHashPassword(user.getPassword()));
+        preparedStatement.executeUpdate();
+
+        Statement statement = MessageController.conn.createStatement();
+        String sqlSelect = "SELECT name, password FROM users ORDER BY id DESC LIMIT 1";
+        rs = statement.executeQuery(sqlSelect);
+        while (rs.next()) {
+            user.setName(rs.getString(1));
+            user.setPassword(rs.getString(2));
+        }
+        return user;
+    }
+
 }

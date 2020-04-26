@@ -3,6 +3,7 @@ package com.example.restservice.model;
 import com.example.restservice.controller.MessageController;
 import com.example.restservice.sql.SqlConnection;
 import com.example.restservice.sql.SqlNames;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -14,6 +15,7 @@ public class Message {
     private String userName;
     private double xCoordinate;
     private double yCoordinate;
+    @JsonFormat(timezone = "GMT+03:00", pattern="yyyy-MM-dd HH:mm:ss")
     private Timestamp createDate;
 
     public void setText(String text) {
@@ -145,4 +147,34 @@ public class Message {
 
         return messagesSearchResponse;
     }
+
+    public static Message createNewMessage(MessageCreateRequest request) throws SQLException, ClassNotFoundException {
+        if(MessageController.conn == null) MessageController.conn = SqlConnection.getMySQLConnection();
+
+
+        String sqlInsert = "INSERT INTO `messages`.`messages`(`text`,`user_name`,`coordinate`,`create_date`)" +
+                "VALUES(?,?,(GeomFromWKB(Point(?,?))),now());";
+
+        PreparedStatement preparedStatement = MessageController.conn.prepareStatement(sqlInsert);
+        preparedStatement.setString(1, request.getText());
+        preparedStatement.setString(2, request.getUser_name());
+        preparedStatement.setString(3, request.getLatitude());
+        preparedStatement.setString(4, request.getLongitude());
+        preparedStatement.executeUpdate();
+
+        Statement statement = MessageController.conn.createStatement();
+        String sqlSelect = "SELECT text, user_name, X( `coordinate` ) , Y( `coordinate` ), create_date" +
+                " FROM messages.messages ORDER BY create_date DESC LIMIT 1";
+        ResultSet rs = statement.executeQuery(sqlSelect);
+        Message message = new Message();
+        while (rs.next()) {
+            message.setText(rs.getString(1));
+            message.setUserName(rs.getString(2));
+            message.setxCoordinate(rs.getDouble(3));
+            message.setyCoordinate(rs.getDouble(4));
+            message.setCreateDate(rs.getTimestamp(5));
+        }
+        return message;
+    }
+
 }

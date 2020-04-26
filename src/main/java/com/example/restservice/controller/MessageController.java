@@ -45,32 +45,7 @@ public class MessageController {
                                         @RequestHeader ("user_name") String userName,
                                         @RequestHeader("user_password") String userPassword)
             throws SQLException, ClassNotFoundException, NoSuchAlgorithmException {
-
-        if(conn == null) conn = SqlConnection.getMySQLConnection();
         User.isValidUser(userName, userPassword);
-        String sqlInsert = "INSERT INTO `messages`.`messages`(`text`,`user_name`,`coordinate`,`create_date`)" +
-                           "VALUES(?,?,(GeomFromWKB(Point(?,?))),now());";
-
-        PreparedStatement preparedStatement = conn.prepareStatement(sqlInsert);
-        preparedStatement.setString(1, request.getText());
-        preparedStatement.setString(2, request.getUser_name());
-        preparedStatement.setString(3, request.getLatitude());
-        preparedStatement.setString(4, request.getLongitude());
-        preparedStatement.executeUpdate();
-
-        Statement statement = conn.createStatement();
-        String sqlSelect = "SELECT text, user_name, X( `coordinate` ) , Y( `coordinate` ), create_date" +
-                           " FROM messages.messages ORDER BY create_date DESC LIMIT 1";
-        ResultSet rs = statement.executeQuery(sqlSelect);
-        Message message = new Message();
-        while (rs.next()) {
-            message.setText(rs.getString(1));
-            message.setUserName(rs.getString(2));
-            message.setxCoordinate(rs.getDouble(3));
-            message.setyCoordinate(rs.getDouble(4));
-            message.setCreateDate(rs.getTimestamp(5));
-            System.out.println(message.getCreateDate());
-        }
-        return message;
+        return Message.createNewMessage(request);
     }
 }
